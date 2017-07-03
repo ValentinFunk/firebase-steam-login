@@ -7,7 +7,7 @@ Enables users to log in via steam, then redirects passing a firebase auth token 
 Dev: ``yarn dev``
 Prod: ``yarn start``
 
-In your firebase app redirect to /auth/steam?client_id=<clientId>. ``clientId`` needs to be configured in the CLIENTS environment variable (see below).
+In your firebase app redirect to /auth/steam?client_id=\<clientId\>. ``clientId`` needs to be configured in the CLIENTS environment variable (see below).
 
 ## Configuration
 
