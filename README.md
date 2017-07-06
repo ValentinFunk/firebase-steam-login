@@ -1,6 +1,7 @@
 # Steam -> Firebase token generator
 
-Enables users to log in via steam, then redirects passing a firebase auth token as query.
+1) Enables users to log in via steam, then redirects passing a firebase auth token as query.
+2) Users can link their Discord app to their steam account.
 
 ## Running
 

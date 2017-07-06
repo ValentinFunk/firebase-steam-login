@@ -15,7 +15,7 @@ try {
 }
 
 export let validClients: {
-    [index:string]: string
+  [index: string]: string
 };
 try {
   validClients = JSON.parse(process.env.CLIENTS);
@@ -27,24 +27,42 @@ try {
 
 export let firebaseDbUrl: string = process.env.FIREBASE_DB_URL;
 if (!firebaseDbUrl) {
-    console.error("Missing FIREBASE_DB_URL");
-    process.exit(1);
+  console.error("Missing FIREBASE_DB_URL");
+  process.exit(1);
 }
 
 export let rootUrl: string = process.env.ROOT_URL;
 if (!rootUrl) {
-    console.error("Missing ROOT_URL");
-    process.exit(1);
+  console.error("Missing ROOT_URL");
+  process.exit(1);
 }
 
 export let realm: string = process.env.REALM;
 if (!rootUrl) {
-    console.error("Missing REALM");
-    process.exit(1);
+  console.error("Missing REALM");
+  process.exit(1);
 }
 
 export let steamApiKey: string = process.env.STEAM_API_KEY;
 if (!steamApiKey) {
   console.error("[ERROR] No STEAM_API_KEY specified");
+  process.exit(1);
+}
+
+export let discordClientId: string = process.env.DISCORD_CLIENT_ID;
+if (!steamApiKey) {
+  console.error("[ERROR] No DISCORD_CLIENT_ID specified");
+  process.exit(1);
+}
+
+export let discordClientSecret: string = process.env.DISCORD_CLIENT_SECRET;
+if (!steamApiKey) {
+  console.error("[ERROR] No DISCORD_CLIENT_SECRET specified");
+  process.exit(1);
+}
+
+export let sessionSecret: string = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  console.error("[ERROR] Missing SESSION_SECRET");
   process.exit(1);
 }
