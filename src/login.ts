@@ -1,36 +1,15 @@
 import * as express from "express";
 import * as admin from "firebase-admin";
 import * as querystring from "querystring";
-import { validClients } from "./config";
+import { validClients, jwtPublic, jwtSecret } from "./config";
 import { SteamProfileResult } from "./types/ISteamProfileResults";
 import { AlreadyLinkedError, User } from "./user.model";
-
-/**
- * Wrapper function that makes an async function usable as express controller.
- * Redirects the user back to the session return URL that was set when initing the
- * auth request.
- *
- * example: ```
- *  async function(req, res) => {
- *    throw new Error();
- *  }
- *  app.get('/route', asyncRequest.bind(undefined, functionThatErrors));
- * ```
- * @param asyncFn the function to wrap (should be bound)
- * @param req express request
- * @param res express response
- */
-function asyncRequest(asyncFn: express.RequestHandler, req: express.Request, res: express.Response) {
-  asyncFn(req, res, undefined).catch((e: any) => {
-    if (validClients[req.session.client_id]) {
-      const code = e.code ? e.code : "unknown";
-      res.redirect(validClients[req.session.client_id] + "?code=" + code);
-    } else {
-      console.error(e);
-      res.status(500).write("Error logging in");
-    }
-  });
-}
+import * as promisify from "typed-promisify";
+import * as jwt from "jsonwebtoken";
+import { asyncRequestRedirectOnError } from "src/utils";
+import { asyncRequest } from "src/utils";
+import { asyncMiddleware } from "src/utils";
+const jwtSign = promisify.promisify<object, string, jwt.SignOptions, string>(jwt.sign);
 
 /**
  * Function to be passsed to the SteamStrategy. Creates the firebase user
@@ -79,47 +58,45 @@ export async function handleSteamLogin(accessToken: string, steamProfile: SteamP
  * has logged in to link their Discord account. Stores the discord profile into the
  * user's profile and returns the user.
  */
-export async function handleDiscordLogin(req: express.Request, res: express.Response, done: express.NextFunction): Promise<User> {
-  const userId = req.session.userId;
-  if (!userId) {
-    throw new Error("Invalid Session: userId missing");
-  }
+export const handleDiscordLogin = asyncMiddleware.bind(undefined,
+  async function handleDiscordLogin(req: express.Request) {
+    const userId = req.session.userId;
+    if (!userId) {
+      throw new Error("Invalid Session: userId missing");
+    }
 
-  const firebaseUser = await admin.auth().getUser(userId);
-  if (!firebaseUser) {
-    throw new Error("Invalid Firebase User in Session id:" + userId);
-  }
+    const firebaseUser = await admin.auth().getUser(userId);
+    if (!firebaseUser) {
+      throw new Error("Invalid Firebase User in Session id:" + userId);
+    }
 
-  let userProfile = await admin.app().database().ref(`profiles/${userId}`).once("value");
-  if (!userProfile) {
-    throw new Error(`User ${userId} has no profile!`);
-  }
-  if (userProfile.discord && userProfile.discord.id != req.user.discordProfile.id) {
-    throw new AlreadyLinkedError();
-  }
+    const userProfile = await admin.app().database().ref(`profiles/${userId}`).once("value");
+    if (!userProfile) {
+      throw new Error(`User ${userId} has no profile!`);
+    }
+    if (userProfile.discord && userProfile.discord.id != req.user.discordProfile.id) {
+      throw new AlreadyLinkedError();
+    }
 
-  await Promise.all([
-    admin.app().database().ref(`profiles/${userId}`).update({
-      discord: req.user.discordProfile
-    }),
-    admin.app().database().ref(`tokens/${userId}`).update({
-      discord: {
-        accessToken: req.user.accessToken,
-        refreshToken: req.user.refreshToken
-      }
-    })
-  ]);
-
-  // Return updated profile
-  userProfile = await admin.app().database().ref(`profiles/${firebaseUser.uid}`).once("value");
-  return Object.assign({}, userProfile, firebaseUser);
-}
+    await Promise.all([
+      admin.app().database().ref(`profiles/${userId}`).update({
+        discord: req.user.discordProfile
+      }),
+      admin.app().database().ref(`tokens/${userId}`).update({
+        discord: {
+          accessToken: req.user.accessToken,
+          refreshToken: req.user.refreshToken
+        }
+      })
+    ]);
+  }
+);
 
 /**
  * Express controller function that redirects the user back to the auth requesting
  * application with a firebase Token. Called at the end of the authentication chain.
  */
-export const redirectWithToken = asyncRequest.bind(undefined,
+export const redirectWithToken = asyncRequestRedirectOnError.bind(undefined,
   async function redirectWithToken(req: express.Request, res: express.Response) {
     const user = req.user as User;
     // This should never happen as we're in an oauth callback
@@ -156,3 +133,38 @@ export const redirectWithToken = asyncRequest.bind(undefined,
     res.redirect(`${redirectUrl}?${queryStr}`);
   }
 );
+
+/**
+ * Generates a JWT with a session time of a month.
+ */
+export const generateLonglivedToken = asyncRequest.bind(undefined,
+  async function generateLonglivedToken(req: express.Request, res: express.Response) {
+    if (!req.body.idToken) {
+      throw new Error("Missing id token");
+    }
+
+    const parsedToken = await admin.app().auth().verifyIdToken(req.body.idToken);
+
+    const payload = {
+      uid: parsedToken.uid
+    };
+    const options: jwt.SignOptions = {
+      issuer: "firebase-steam-login",
+      expiresIn: "1m",
+      algorithm: "RS256",
+      subject: parsedToken.uid,
+      audience: parsedToken.aud
+    };
+
+    const token = await jwtSign(payload, jwtSecret, options);
+    const decoded = jwt.decode(token) as any;
+    res.json({ token, expires: decoded.exp * 1000 });
+  }
+);
+
+/**
+ * Returns JWT Public Key for token verification.
+ */
+export function getJwtPublicKey(req: express.Request, res: express.Response) {
+  res.json({ key: jwtPublic });
+}

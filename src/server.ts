@@ -6,11 +6,13 @@ import * as compression from "compression";
 import * as errorHandler from "errorhandler";
 import * as session from "express-session";
 import * as passport from "passport";
+import * as cors from "cors";
 import expressValidator = require("express-validator");
 import DiscordStrategy = require("passport-discord");
 import SteamStrategy = require("passport-steam");
 import * as config from "./config";
-import { handleSteamLogin, redirectWithToken, handleDiscordLogin } from "./login";
+import { handleSteamLogin, redirectWithToken, handleDiscordLogin, getJwtPublicKey, generateLonglivedToken } from "./login";
+import *  as url from "url";
 
 admin.initializeApp({
   credential: admin.credential.cert(config.firebaseCert),
@@ -25,6 +27,19 @@ const app = express();
 app.use(session({
   secret: config.sessionSecret,
 }));
+
+const validOrigins = Object.values(config.validClients)
+  .map(returnUrl => {
+    const parsed = url.parse(returnUrl);
+    return parsed.protocol + "//" + parsed.hostname + ":" + parsed.port;
+  });
+
+app.use(cors({
+  origin: validOrigins,
+  methods: ["GET", "POST"],
+  preflightContinue: true
+}));
+console.log(validOrigins);
 
 /**
  * Passport configuration.
@@ -154,6 +169,8 @@ app.get("/auth/discord/callback",
   redirectWithToken
 );
 
+app.get("/jwt-public", getJwtPublicKey);
+app.post("/longlived-token", generateLonglivedToken);
 
 /**
  * Start Express server.

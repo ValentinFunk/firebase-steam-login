@@ -31,6 +31,18 @@ if (!firebaseDbUrl) {
   process.exit(1);
 }
 
+export let jwtSecret: string = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  console.error("Missing JWT_SECRET (jwt private key)");
+  process.exit(1);
+}
+
+export let jwtPublic: string = process.env.JWT_PUBLIC;
+if (!jwtPublic) {
+  console.error("Missing JWT_PUBLIC (jwt public key");
+  process.exit(1);
+}
+
 export let rootUrl: string = process.env.ROOT_URL;
 if (!rootUrl) {
   console.error("Missing ROOT_URL");
