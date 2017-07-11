@@ -23,7 +23,7 @@ export function asyncRequestRedirectOnError(asyncFn: express.RequestHandler, req
       res.redirect(validClients[req.session.client_id] + "?code=" + code);
     } else {
       console.error(e);
-      res.status(500).write("Error logging in");
+      res.status(500).send("Error logging in");
     }
   });
 }
@@ -45,7 +45,7 @@ export function asyncRequestRedirectOnError(asyncFn: express.RequestHandler, req
 export function asyncRequest(asyncFn: express.RequestHandler, req: express.Request, res: express.Response) {
   asyncFn(req, res, undefined).catch((e: any) => {
     console.error(e);
-    res.status(500).write("Error " + e.message);
+    res.status(500).send("Error " + e.message);
   });
 }
 

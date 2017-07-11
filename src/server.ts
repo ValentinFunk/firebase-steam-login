@@ -39,7 +39,6 @@ app.use(cors({
   methods: ["GET", "POST"],
   preflightContinue: true
 }));
-console.log(validOrigins);
 
 /**
  * Passport configuration.

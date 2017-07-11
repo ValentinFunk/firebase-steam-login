@@ -6,9 +6,7 @@ import { SteamProfileResult } from "./types/ISteamProfileResults";
 import { AlreadyLinkedError, User } from "./user.model";
 import * as promisify from "typed-promisify";
 import * as jwt from "jsonwebtoken";
-import { asyncRequestRedirectOnError } from "src/utils";
-import { asyncRequest } from "src/utils";
-import { asyncMiddleware } from "src/utils";
+import { asyncRequestRedirectOnError, asyncRequest, asyncMiddleware } from "./utils";
 const jwtSign = promisify.promisify<object, string, jwt.SignOptions, string>(jwt.sign);
 
 /**
@@ -155,7 +153,7 @@ export const generateLonglivedToken = asyncRequest.bind(undefined,
       subject: parsedToken.uid,
       audience: parsedToken.aud
     };
-
+    console.log(jwtSecret);
     const token = await jwtSign(payload, jwtSecret, options);
     const decoded = jwt.decode(token) as any;
     res.json({ token, expires: decoded.exp * 1000 });
