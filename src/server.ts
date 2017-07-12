@@ -114,8 +114,9 @@ app.get("/auth/steam",
   function validateBeforeRedirect(req, res, done) {
     if (!req.query.client_id || !config.validClients[req.query.client_id]) {
       res.status(400).send("Invalid client id");
-      done("Invalid client id: " + (req.query.client_id || "none given"));
+      return;
     }
+
     req.session.client_id = req.query.client_id;
     req.session.provider = "steam";
 
@@ -139,7 +140,7 @@ app.get("/auth/discord",
     // Validate client_id
     if (!req.query.client_id || !config.validClients[req.query.client_id]) {
       res.status(400).send("Missing or invalid client_id");
-      done("Invalid client id: " + (req.query.client_id || "none given"));
+      return;
     }
     req.session.client_id = req.query.client_id;
     req.session.provider = "discord";
@@ -147,7 +148,7 @@ app.get("/auth/discord",
     // Validate auth_token
     if (!req.query.id_token) {
       res.status(403).send("Missing id_token");
-      done("Invalid client id: " + (req.query.client_id || "none given"));
+      return;
     }
 
     admin.auth().verifyIdToken(req.query.id_token).then(value => {

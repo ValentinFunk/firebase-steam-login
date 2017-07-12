@@ -4,11 +4,11 @@
   "main": "dist/server.js",
   "license": "MIT",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "dev": "npm run build && npm run watch",
     "build": "npm run build-ts && npm run tslint && npm run copy-static-assets",
-    "serve": "node dist/server.js",
-    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"nodemon dist/server.js\"",
+    "serve": "node dist/src/server.js",
+    "watch": "npm run build-ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"nodemon dist/src/server.js\"",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
@@ -49,6 +49,7 @@
     "morgan": "^1.8.2",
     "passport": "^0.3.2",
     "passport-discord": "^0.1.2",
-    "passport-steam": "^1.0.8"
+    "passport-steam": "^1.0.8",
+    "typed-promisify": "^0.4.0"
   }
 }

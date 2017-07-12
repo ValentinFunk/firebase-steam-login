@@ -19,27 +19,26 @@ const jwtSign = promisify.promisify<object, string, jwt.SignOptions, string>(jwt
  * @param profile
  */
 export async function handleSteamLogin(accessToken: string, steamProfile: SteamProfileResult): Promise<User> {
-  let firebaseUser: admin.auth.UserRecord;
-  try {
-    firebaseUser = await admin.auth().getUser(steamProfile.id.toString());
-  } catch (e) {
-    if (!e.code || e.code != "auth/user-not-found") {
-      throw e;
-    }
+  const firebaseProfiles = (await admin.database().ref("profiles").orderByChild("steam/steamid").equalTo(steamProfile.id.toString()).once("value")).val();
+  let existingUserId: string;
+  if (firebaseProfiles && Object.keys(firebaseProfiles).length > 0) {
+    existingUserId = Object.keys(firebaseProfiles)[0];
   }
+  let firebaseUser = existingUserId && await admin.auth().getUser(existingUserId);
 
   if (!firebaseUser) {
     firebaseUser = await admin.auth().createUser({
       emailVerified: false,
+      email: steamProfile.id + "@steamcommunity.com",
       displayName: steamProfile.displayName,
       photoURL: steamProfile.photos[2].value,
       disabled: false
     });
   } else {
     // On Login update name and avatar
-    firebaseUser = await admin.auth().updateUser(steamProfile.id.toString(), {
+    firebaseUser = await admin.auth().updateUser(existingUserId, {
       displayName: steamProfile.displayName,
-      photoURL: steamProfile.photos[2]
+      photoURL: steamProfile.photos[2].value,
     });
   }
 
@@ -148,12 +147,12 @@ export const generateLonglivedToken = asyncRequest.bind(undefined,
     };
     const options: jwt.SignOptions = {
       issuer: "firebase-steam-login",
-      expiresIn: "1m",
+      expiresIn: "30d",
       algorithm: "RS256",
       subject: parsedToken.uid,
       audience: parsedToken.aud
     };
-    console.log(jwtSecret);
+
     const token = await jwtSign(payload, jwtSecret, options);
     const decoded = jwt.decode(token) as any;
     res.json({ token, expires: decoded.exp * 1000 });
