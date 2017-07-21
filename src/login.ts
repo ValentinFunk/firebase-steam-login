@@ -43,6 +43,8 @@ export async function handleSteamLogin(accessToken: string, steamProfile: SteamP
   }
 
   await admin.app().database().ref(`profiles/${firebaseUser.uid}`).update({
+    displayName: steamProfile.displayName,
+    photoURL: steamProfile.photos[2].value,
     steam: steamProfile._json
   });
 
