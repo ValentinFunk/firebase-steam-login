@@ -1,12 +1,14 @@
+import { StoredToken, OAuthTokenResponse } from "./types/OAuthToken.d";
 import * as express from "express";
 import * as admin from "firebase-admin";
 import * as querystring from "querystring";
-import { validClients, jwtPublic, jwtSecret } from "./config";
+import { validClients, jwtPublic, jwtSecret, discordClientId, discordClientSecret } from "./config";
 import { SteamProfileResult } from "./types/ISteamProfileResults";
 import { AlreadyLinkedError, User } from "./user.model";
 import * as promisify from "typed-promisify";
 import * as jwt from "jsonwebtoken";
 import { asyncRequestRedirectOnError, asyncRequest, asyncMiddleware } from "./utils";
+import * as request from "request-promise";
 const jwtSign = promisify.promisify<object, string, jwt.SignOptions, string>(jwt.sign);
 
 /**
@@ -53,6 +55,38 @@ export async function handleSteamLogin(accessToken: string, steamProfile: SteamP
 }
 
 /**
+ * Gets a discord auth token form a refresh token containing properties such as
+ * expiration and scope.
+ * @param refreshToken refresh token
+ */
+async function getDiscordTokenFromRefreshToken(refreshToken: string): Promise<StoredToken> {
+  const body = querystring.stringify({
+    refresh_token: refreshToken,
+    client_id: discordClientId,
+    client_secret: discordClientSecret,
+    grant_type: "refresh_token"
+  });
+  console.log(body);
+
+  return await Promise.resolve(request.post("https://discordapp.com/api/oauth2/token", {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Length": body.length
+    },
+    body,
+    json: true
+  }).then((token: OAuthTokenResponse): StoredToken => {
+    return {
+      access_token: token.access_token,
+      expires: new Date().getTime() + token.expires_in,
+      refresh_token: refreshToken,
+      token_type: token.token_type,
+      scope: token.scope
+    };
+  }));
+}
+
+/**
  * Function called after a Firebase Authenticated user (stored in session.userId)
  * has logged in to link their Discord account. Stores the discord profile into the
  * user's profile and returns the user.
@@ -77,15 +111,13 @@ export const handleDiscordLogin = asyncMiddleware.bind(undefined,
       throw new AlreadyLinkedError();
     }
 
+    // Get extended token info and store all info into the database
     await Promise.all([
       admin.app().database().ref(`profiles/${userId}`).update({
         discord: req.user.discordProfile
       }),
       admin.app().database().ref(`tokens/${userId}`).update({
-        discord: {
-          accessToken: req.user.accessToken,
-          refreshToken: req.user.refreshToken
-        }
+        discord: await getDiscordTokenFromRefreshToken(req.user.refreshToken)
       })
     ]);
   }

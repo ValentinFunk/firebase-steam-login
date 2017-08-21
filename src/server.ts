@@ -73,9 +73,10 @@ passport.use(new SteamStrategy({
 passport.use(new DiscordStrategy({
   clientID: config.discordClientId,
   clientSecret: config.discordClientSecret,
-  scope: ["identify", "email", "guilds.join"],
+  scope: ["identify", "email", "guilds.join", "guilds"],
   callbackURL: config.rootUrl + "/auth/discord/callback"
 }, (accessToken, refreshToken, profile, done) => {
+
   done(undefined, {
     discordProfile: profile,
     accessToken,
