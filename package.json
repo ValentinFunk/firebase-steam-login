@@ -13,7 +13,7 @@
     "docker-build": "npm run build && docker build -t firebase-steam-login .",
     "serve": "node dist/src/server.js",
     "watch": "npm run build-ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"nodemon dist/src/server.js\"",
-    "build-ts": "tsc",
+    "build-ts": "yarn tsc",
     "watch-ts": "tsc -w",
     "postinstall": "npm run build",
     "tslint": "tslint -c tslint.json -p tsconfig.json -e \"node_modules/**/*.*\"",
