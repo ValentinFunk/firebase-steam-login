@@ -15,7 +15,7 @@
     "watch": "npm run build-ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"nodemon dist/src/server.js\"",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
-    "postinstall": "build",
+    "postinstall": "npm run build",
     "tslint": "tslint -c tslint.json -p tsconfig.json -e \"node_modules/**/*.*\"",
     "copy-static-assets": "node copy-static-assets.js"
   },
