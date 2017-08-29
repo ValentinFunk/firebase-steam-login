@@ -172,6 +172,9 @@ app.get("/auth/discord/callback",
 
 app.get("/jwt-public", getJwtPublicKey);
 app.post("/longlived-token", generateLonglivedToken);
+app.get("/healthz", (_, res) => {
+  res.status(200).send("OK");
+});
 
 /**
  * Start Express server.
