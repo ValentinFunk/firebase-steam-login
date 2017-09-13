@@ -1,4 +1,3 @@
-import { validClients } from "./config";
 import * as express from "express";
 
 /**
@@ -16,7 +15,12 @@ import * as express from "express";
  * @param req express request
  * @param res express response
  */
-export function asyncRequestRedirectOnError(asyncFn: express.RequestHandler, req: express.Request, res: express.Response) {
+export function asyncRequestRedirectOnError(
+  asyncFn: express.RequestHandler,
+  req: express.Request,
+  res: express.Response,
+  validClients: {[index: string]: string}
+) {
   asyncFn(req, res, undefined).catch((e: any) => {
     if (validClients[req.session.client_id]) {
       const code = e.code ? e.code : "unknown";
@@ -63,6 +67,12 @@ export function asyncRequest(asyncFn: express.RequestHandler, req: express.Reque
  * @param req express request
  * @param res express response
  */
-export function asyncMiddleware(asyncFn: express.RequestHandler, req: express.Request, res: express.Response, done: express.NextFunction) {
+export function asyncMiddleware(
+  asyncFn: express.RequestHandler,
+  req: express.Request,
+  res: express.Response,
+  done: express.NextFunction
+) {
   asyncFn(req, res, undefined).then(done, done);
 }
+

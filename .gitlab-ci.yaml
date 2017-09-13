@@ -1,0 +1,36 @@
+image: docker:latest
+
+variables:
+  DOCKER_DRIVER: overlay
+
+services:
+  - docker:dind
+
+stages:
+  - build
+  - deploy
+
+build-typescript:
+  image: node:8-alpine
+  tags:
+    - gitlab-org-high-cpu
+  except: ['tags']
+  stage: build
+  script:
+    - "yarn"
+    - "yarn build"
+  artifacts:
+    paths:
+      - dist
+
+deploy:
+  except: ['tags']
+  stage: deploy
+  tags:
+    - docker
+  script:
+    - "docker build -t dokku/firebase-steam-login:$CI_PIPELINE_ID ."
+    - 'docker save dokku/$DOKKU_APP_ID:$CI_PIPELINE_ID | bzip2 | ssh $DOKKU_HOST "bunzip2 | docker load"'
+    - 'ssh $DOKKU_HOST "dokku tags:create $DOKKU_APP_ID previous; dokku tags:deploy $DOKKU_APP_ID $CI_PIPELINE_ID && dokku tags:create $DOKKU_APP_ID latest"'
+  environment:
+    name: production

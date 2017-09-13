@@ -1,13 +1,19 @@
+import { Config } from "./config";
 import * as dotenv from "dotenv";
+import * as url from "url";
+import * as admin from "firebase-admin";
 
 /**
  * Load environment variables from .env file, where API keys and passwords are configured.
  */
-dotenv.config({ path: ".env" });
+dotenv.config();
 
-export let firebaseCert: {};
+/**
+ * Validate all environment configuration
+ */
+export let firebaseCert: admin.credential.Credential;
 try {
-  firebaseCert = JSON.parse(process.env.FIREBASE_SERVICE_ACC);
+  firebaseCert = admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACC));
 } catch (e) {
   console.error("[ERROR] Invalid FIREBASE_SERVICE_ACC json: " + e.mesage);
   console.error(e);
@@ -49,12 +55,6 @@ if (!rootUrl) {
   process.exit(1);
 }
 
-export let realm: string = process.env.REALM;
-if (!rootUrl) {
-  console.error("Missing REALM");
-  process.exit(1);
-}
-
 export let steamApiKey: string = process.env.STEAM_API_KEY;
 if (!steamApiKey) {
   console.error("[ERROR] No STEAM_API_KEY specified");
@@ -78,3 +78,27 @@ if (!sessionSecret) {
   console.error("[ERROR] Missing SESSION_SECRET");
   process.exit(1);
 }
+
+export const EnvConfig: Config & { firebaseConfig: admin.AppOptions } = {
+  firebaseConfig: {
+    credential: firebaseCert,
+    databaseURL: firebaseDbUrl
+  },
+  clients: validClients,
+  jwtConfig: {
+    jwtPublic,
+    jwtSecret
+  },
+  rootUrl,
+  steamApiKey,
+  discord: {
+    clientSecret: discordClientSecret,
+    clientId: discordClientId
+  },
+  sessionSecret,
+  corsOrigins: Object.values(validClients)
+    .map(returnUrl => {
+      const parsed = url.parse(returnUrl);
+      return parsed.protocol + "//" + parsed.hostname + ":" + parsed.port;
+    })
+};
