@@ -5,7 +5,6 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as compression from "compression";
 import * as errorHandler from "errorhandler";
-import * as session from "express-session";
 import * as querystring from "querystring";
 import { Passport } from "passport";
 import * as cors from "cors";
@@ -32,10 +31,6 @@ export class App {
 
   constructor(private config: Config) {
     this.discordController = new DiscordController(this.config);
-    this.app.use(session({
-      secret: config.sessionSecret,
-      name: "__session"
-    }));
     this.app.use(cors({
       origin: config.corsOrigins,
       methods: ["GET", "POST"],

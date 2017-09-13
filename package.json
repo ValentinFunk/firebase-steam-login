@@ -43,6 +43,7 @@
     "body-parser": "^1.17.2",
     "change-case": "^3.0.1",
     "compression": "^1.6.2",
+    "connect-session-firebase": "^5.0.0",
     "core-js": "^2.5.1",
     "cors": "^2.8.3",
     "dotenv": "^4.0.0",
