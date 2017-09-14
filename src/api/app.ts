@@ -18,10 +18,6 @@ import { Config } from "./../config/config";
 import { JwtController } from "./jwt-controller";
 import { DiscordController } from "./discord-controller";
 
-function regenerateSession(req: express.Request, res: express.Response, done: express.NextFunction) {
-  req.session.regenerate(done);
-}
-
 export class App {
   private passport = new Passport();
 
@@ -103,8 +99,8 @@ export class App {
    * Express controller function that redirects the user back to the auth requesting
    * application with a firebase Token. Called at the end of the authentication chain.
    */
-  private redirectWithToken = asyncRequestRedirectOnError.bind(undefined,
-    async (req: express.Request, res: express.Response) => {
+  private redirectWithToken(_req: express.Request, _res: express.Response) {
+    asyncRequestRedirectOnError(async (req, res) => {
       const user = req.user as User;
       // This should never happen as we're in an oauth callback
       if (!user) {
@@ -126,6 +122,7 @@ export class App {
       };
 
       if (provider == "steam") {
+        console.log("Creating token for user", user);
         // Create a firebase auth token and redirect the user
         const token = await admin.auth().createCustomToken(user.uid);
         query.token = token;
@@ -138,15 +135,14 @@ export class App {
 
       const queryStr = querystring.stringify(query);
       res.redirect(`${redirectUrl}?${queryStr}`);
-    }
-  );
+    }, _req, _res, this.config.clients);
+  }
 
   private setupSteamRoutes() {
     /**
      * Primary Authentication: Steam
      */
     this.app.get("/auth/steam",
-      regenerateSession,
       (req, res, done) => {
         if (!req.query.client_id || !this.config.clients[req.query.client_id]) {
           res.status(400).send("Invalid client id");
@@ -155,13 +151,16 @@ export class App {
 
         req.session.client_id = req.query.client_id;
         req.session.provider = "steam";
-
-        done();
+        req.session.save(done);
       },
       this.passport.authenticate("steam", { failureRedirect: "/fail" })
     );
 
     this.app.get("/auth/steam/callback",
+      function (req, res, next) { // https://github.com/liamcurry/passport-steam/issues/37#issuecomment-231127554
+        console.log(req.url, req.originalUrl);
+        req.url = req.originalUrl; next();
+      },
       this.passport.authenticate("steam", { failureRedirect: "/fail" }),
       (req, res) => this.redirectWithToken(req, res)
     );
@@ -176,7 +175,6 @@ export class App {
      * @apiParam {String} id_token    The firebase id token of the signed in user.
      */
     this.app.get("/auth/discord",
-      regenerateSession,
       (req, res, done) => { // validate and login before redirect
         // Validate client_id
         if (!req.query.client_id || !this.config.clients[req.query.client_id]) {
@@ -194,7 +192,7 @@ export class App {
 
         admin.auth().verifyIdToken(req.query.id_token).then(value => {
           req.session.userId = value.uid;
-          done();
+          req.session.save(done);
         }, err => {
           console.error("Could not verify id_token");
           res.status(403).send("Invalid id_token");

@@ -9,20 +9,25 @@ import * as admin from "firebase-admin";
 import * as session from "express-session";
 import * as firebaseStore from "connect-session-firebase";
 import * as express from "express";
+import { changeKeyCase } from "./util/change-key-case";
 
-admin.initializeApp(functions.config().firebase);
+const firebaseServiceAcc = changeKeyCase(functions.config()["steam-login"].firebase, "snake");
+admin.initializeApp({
+  credential: admin.credential.cert(firebaseServiceAcc),
+  databaseURL: `https://${firebaseServiceAcc.project_id}.firebaseio.com`
+});
 const FirebaseStore = firebaseStore(session);
 const store = new FirebaseStore({
   database: admin.database()
 });
-console.log(store);
 
 const app = express();
 app.use(session({
-  // store,
+  store,
   secret: config.sessionSecret,
-  resave: true,
-  saveUninitialized: true
+  resave: false,
+  saveUninitialized: true,
+  name: "__session"
 }));
 new App(config, app);
 

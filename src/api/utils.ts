@@ -23,6 +23,7 @@ export function asyncRequestRedirectOnError(
 ) {
   asyncFn(req, res, undefined).catch((e: any) => {
     if (validClients[req.session.client_id]) {
+      console.error(e);
       const code = e.code ? e.code : "unknown";
       res.redirect(validClients[req.session.client_id] + "?code=" + code);
     } else {

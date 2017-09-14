@@ -20,7 +20,7 @@ export function changeKeyCase(
 ): any {
   return Object.entries(obj).reduce((acc, [k, v]) => {
     const newKey = (changeCase as any)[wanted](k);
-    acc[newKey] = isObject(v) && changeKeyCase(v, wanted) || v;
+    acc[newKey] = isObject(v) ? changeKeyCase(v, wanted) : v;
     return acc;
   }, {} as any);
 }

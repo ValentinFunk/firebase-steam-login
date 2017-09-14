@@ -43,7 +43,11 @@ Next fill all configuration variables. Firebase functions does not use environme
     },
     "session-secret": "some random string",
     "steam-api-key": "steam api key",
-    "root-url": "root url (e.g. https://my-app.com"
+    "root-url": "root url (e.g. https://my-app.com",
+    "firebase": {
+      "client_id": "afssdaf",
+      "THIS IS YOUR FIREBASE SERVICE ACCOUNT": "FROM https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk"
+    }
   }
 }
 ```
@@ -53,3 +57,5 @@ Pipe the json to the config generator: ```cat config.json | node json-to-firebas
 Deploy the function: ```yarn deploy:firebase```
 
 You can then use all of the endpoints against that function. (https://us-central1-project-id.cloudfunctions.net/firebaseSteamLogin/auth/steam?client_id=my-app)
+
+Note: At the moment we cannot use functions.config().firebase as the credentials do not support signing tokens (see also https://stackoverflow.com/questions/42717540/firebase-cloud-functions-createcustomtoken/42724251#42724251)
