@@ -8,20 +8,23 @@ import { App } from "./api/app";
 import * as admin from "firebase-admin";
 import * as session from "express-session";
 import * as firebaseStore from "connect-session-firebase";
+import * as express from "express";
 
 admin.initializeApp(functions.config().firebase);
-const app = new App(config).app;
-
 const FirebaseStore = firebaseStore(session);
 const store = new FirebaseStore({
   database: admin.database()
 });
+console.log(store);
+
+const app = express();
 app.use(session({
-  store,
+  // store,
   secret: config.sessionSecret,
   resave: true,
   saveUninitialized: true
 }));
+new App(config, app);
 
 /**
  * Makes it possible to run as firebase function

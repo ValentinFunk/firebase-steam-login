@@ -19,17 +19,17 @@ import { JwtController } from "./jwt-controller";
 import { DiscordController } from "./discord-controller";
 
 function regenerateSession(req: express.Request, res: express.Response, done: express.NextFunction) {
-  req.session.regenerate(done);
+  console.log(req.session);
+  req.session.destroy(done);
 }
 
 export class App {
-  public app = express();
   private passport = new Passport();
 
   private discordController: DiscordController;
   private jwtController: JwtController;
 
-  constructor(private config: Config) {
+  constructor(private config: Config, private app: express.Application) {
     this.discordController = new DiscordController(this.config);
     this.app.use(cors({
       origin: config.corsOrigins,
