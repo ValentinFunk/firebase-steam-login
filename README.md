@@ -18,7 +18,7 @@ CLIENTS is json in the format { clientId: redirectUrl }
 
 ### Example:
 
-You have configured ```CLIENTS['my-app'] = 'https://yourdomain.com/login_success'```. You redirect the user to ```https://firebase-steam-login/auth/steam?client_id=my-app```. After the login is finished the user will be redirected to ```https://yourdomain.com/login\_success?token=aehcndb3u584...```
+You have configured ```CLIENTS['my-app'] = 'https://yourdomain.com/login_return'```. You redirect the user to ```https://firebase-steam-login/auth/steam?client_id=my-app```. After the login is finished the user will be redirected to ```https://yourdomain.com/login_return?token=aehcndb3u584...```. If the login fails they are redirected to ```https://yourdomain.com/login_return?code=error/code```.
 
 
 ## Deploying to Firebase Functions
@@ -35,7 +35,7 @@ Next fill all configuration variables. Firebase functions does not use environme
       "client-secret": "client secret"
     },
     "clients": {
-      "my-app": "https://my-app.com/login_success"
+      "my-app": "https://my-app.com/login_return"
     },
     "jwt-config": {
       "jwt-secret": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----\n",
