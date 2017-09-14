@@ -19,8 +19,7 @@ import { JwtController } from "./jwt-controller";
 import { DiscordController } from "./discord-controller";
 
 function regenerateSession(req: express.Request, res: express.Response, done: express.NextFunction) {
-  console.log(req.session);
-  req.session.destroy(done);
+  req.session.regenerate(done);
 }
 
 export class App {
