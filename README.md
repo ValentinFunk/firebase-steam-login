@@ -3,6 +3,8 @@
 1) Enables users to log in via steam, then redirects passing a firebase auth token as query (via ?token=blabla).
 2) Users can link their Discord app to their steam account.
 
+** Questions? Suggestions? **: Open an issue here or join Discord: https://discord.gg/3hVMYH3
+
 ## Running
 
 Dev: ``yarn dev``
