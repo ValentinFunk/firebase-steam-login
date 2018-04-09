@@ -58,7 +58,7 @@
     "morgan": "^1.8.2",
     "passport": "^0.3.2",
     "passport-discord": "^0.1.2",
-    "passport-steam": "^1.0.8",
+    "passport-steam": "^1.0.9",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
     "rx": "https://registry.yarnpkg.com/rx/-/rx-2.3.24.tgz#14f950a4217d7e35daa71bbcbe58eff68ea4b2b7",
